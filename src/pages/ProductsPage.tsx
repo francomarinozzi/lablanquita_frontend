@@ -3,13 +3,12 @@ import {
   Box, Typography, Button, TextField, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, Paper, IconButton, CircularProgress,
   useMediaQuery, Card, CardContent, CardActions, Dialog, DialogActions,
-  DialogContent, DialogContentText, DialogTitle
+  DialogContent, DialogContentText, DialogTitle, Switch, FormControlLabel
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import type { Producto } from '../types';
-import { createProduct, getProducts, deleteProduct, updateProduct } from '../api/productsService';
+import { createProduct, getProducts, deleteProduct, updateProduct, updateProductStock } from '../api/productsService';
 import ProductModal from '../components/features/ProductModal';
-
 
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -20,10 +19,8 @@ export default function ProductsPage() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [searchTerm, setSearchTerm] = React.useState('');
-
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [productToEdit, setProductToEdit] = React.useState<Producto | null>(null);
-
   const [isConfirmOpen, setIsConfirmOpen] = React.useState(false);
   const [productToDeleteId, setProductToDeleteId] = React.useState<number | null>(null);
 
@@ -54,7 +51,6 @@ export default function ProductsPage() {
       .filter(p => p.nombre && p.nombre.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [products, searchTerm]);
 
-  // Handlers for Modal
   const handleOpenModal = (product: Producto | null = null) => {
     setProductToEdit(product);
     setIsModalOpen(true);
@@ -65,16 +61,14 @@ export default function ProductsPage() {
     setProductToEdit(null);
   };
 
-  const handleSaveProduct = async (data: Omit<Producto, 'id'> | Producto) => {
+  const handleSaveProduct = async (data: Omit<Producto, 'id' | 'activo'> | Producto) => {
     try {
-      if ('id' in data) {
-
+      if ('id' in data && data.id) {
         await updateProduct(data.id, data);
       } else {
-
-        await createProduct(data);
+        await createProduct(data as Omit<Producto, 'id' | 'activo'>);
       }
-      fetchProducts(); 
+      fetchProducts();
     } catch (err) {
       console.error(err);
       setError('Error al guardar el producto.');
@@ -83,7 +77,7 @@ export default function ProductsPage() {
     }
   };
 
-    const handleDeleteClick = (productId: number) => {
+  const handleDeleteClick = (productId: number) => {
     setProductToDeleteId(productId);
     setIsConfirmOpen(true);
   };
@@ -97,12 +91,26 @@ export default function ProductsPage() {
     if (productToDeleteId === null) return;
     try {
       await deleteProduct(productToDeleteId);
-      fetchProducts(); 
+      fetchProducts();
     } catch (err) {
       console.error(err);
       setError('Error al dar de baja el producto');
     } finally {
       handleCloseConfirm();
+    }
+  };
+
+  const handleToggleStock = async (productId: number) => {
+    setProducts(prevProducts =>
+      prevProducts.map(p =>
+        p.id === productId ? { ...p, en_stock: !p.en_stock } : p
+      )
+    );
+    try {
+      await updateProductStock(productId);
+    } catch (err) {
+      setError('No se pudo actualizar el stock. Reintentando...');
+      fetchProducts();
     }
   };
 
@@ -118,23 +126,31 @@ export default function ProductsPage() {
 
   const renderDesktopTable = () => (
     <TableContainer component={Paper}>
-      <Table>
+      <Table sx={{ tableLayout: 'fixed' }}>
         <TableHead>
           <TableRow>
-            <TableCell>Producto</TableCell>
-            <TableCell align="right">Precio</TableCell>
-            <TableCell>En Stock</TableCell>
-            <TableCell>Unidad</TableCell>
-            <TableCell align="center">Acciones</TableCell>
+            <TableCell sx={{ width: '40%' }}>Producto</TableCell>
+            <TableCell sx={{ width: '15%' }} align="right">Precio</TableCell>
+            <TableCell sx={{ width: '15%' }} align="center">En Stock</TableCell>
+            <TableCell sx={{ width: '15%' }}>Unidad</TableCell>
+            <TableCell sx={{ width: '15%' }} align="center">Acciones</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {filteredProducts.map((product) => (
             <TableRow key={product.id}>
-              <TableCell>{product.nombre}</TableCell>
+              <TableCell sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {product.nombre}
+              </TableCell>
               <TableCell align="right">${product.precio.toLocaleString('es-AR')}</TableCell>
-              <TableCell>{product.enStock ? 'Sí' : 'No'}</TableCell>
-              <TableCell>{product.unitOfMeasure}</TableCell>
+              <TableCell align="center">
+                <Switch
+                  checked={product.en_stock}
+                  onChange={() => handleToggleStock(product.id)}
+                  color="primary"
+                />
+              </TableCell>
+              <TableCell>{product.unidadMedida}</TableCell>
               <TableCell align="center">
                 <IconButton onClick={() => handleOpenModal(product)}><EditIcon /></IconButton>
                 <IconButton onClick={() => handleDeleteClick(product.id)}><DeleteIcon color="error" /></IconButton>
@@ -153,8 +169,17 @@ export default function ProductsPage() {
           <CardContent>
             <Typography variant="h6">{product.nombre}</Typography>
             <Typography>Precio: ${product.precio.toLocaleString('es-AR')}</Typography>
-            <Typography>En Stock: {product.enStock ? 'Sí' : 'No'}</Typography>
-            <Typography>Unidad: {product.unitOfMeasure}</Typography>
+            <Typography>Unidad: {product.unidadMedida}</Typography>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={product.en_stock}
+                  onChange={() => handleToggleStock(product.id)}
+                />
+              }
+              label="En Stock"
+              sx={{ pt: 1 }}
+            />
           </CardContent>
           <CardActions sx={{ justifyContent: 'flex-end' }}>
             <Button startIcon={<EditIcon />} onClick={() => handleOpenModal(product)}>Editar</Button>

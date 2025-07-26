@@ -1,13 +1,39 @@
+export const OPCIONES_UNIDAD_MEDIDA = ['unidad', 'kg', 'g'] as const;
 
-export const UNIT_OF_MEASURE_OPTIONS = ['unidad', 'kg', 'g'] as const;
-
-export type UnitOfMeasure = typeof UNIT_OF_MEASURE_OPTIONS[number];
+export type UnidadDeMedida = typeof OPCIONES_UNIDAD_MEDIDA[number];
 
 export interface Producto {
-  id: number | string;
+  id: number;
   nombre: string;
   precio: number;
-  enStock: boolean;
+  en_stock: boolean;
   activo: boolean;
-  unidad_medida: UnitOfMeasure; 
+  unidadMedida: UnidadDeMedida;
+}
+
+export interface DetalleVenta {
+  nombreProducto: string;
+  cantidad: number;
+  precioUnitario: number;
+}
+
+export interface Venta {
+  id: number;
+  fechaHora: string;
+  formaPago: string;
+  total: number;
+  activo:boolean;
+  detalles: DetalleVenta[];
+}
+
+export interface DetalleVentaParaCrear {
+  producto: {
+    id: number;
+  };
+  cantidad: number;
+}
+
+export interface VentaParaCrear {
+  formaPago: string;
+  detalles: DetalleVentaParaCrear[];
 }

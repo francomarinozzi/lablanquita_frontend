@@ -4,70 +4,57 @@ import {
   FormControlLabel, Switch, Box, FormControl, InputLabel, Select, MenuItem
 } from '@mui/material';
 import { useForm, SubmitHandler, Controller } from 'react-hook-form';
-
-import { Product, UNIT_OF_MEASURE_OPTIONS } from '../../types';
-
+import { Producto, OPCIONES_UNIDAD_MEDIDA } from '../../types';
 
 interface ProductModalProps {
   open: boolean;
   onClose: () => void;
-
-  onSave: (data: Omit<Product, 'id'> | Product) => void;
-  productToEdit?: Product | null;
+  onSave: (data: Omit<Producto, 'id' | 'activo'> | Producto) => void;
+  productToEdit?: Producto | null;
 }
 
-
-type FormValues = Omit<Product, 'id' | 'activo'>; 
+type FormValues = Omit<Producto, 'id' | 'activo'>;
 
 export default function ProductModal({ open, onClose, onSave, productToEdit }: ProductModalProps) {
   const { register, handleSubmit, control, reset, formState: { errors } } = useForm<FormValues>({
-    
     defaultValues: {
       nombre: '',
       precio: 0,
-      enStock: true,
-      unidad_medida: 'unidad'
+      en_stock: true,
+      unidadMedida: 'unidad'
     }
   });
 
-  
   React.useEffect(() => {
     if (open) {
       if (productToEdit) {
-  
         reset(productToEdit);
       } else {
-  
         reset({
           nombre: '',
           precio: 0,
-          enStock: true,
-          unidad_medida: 'unidad'
+          en_stock: true,
+          unidadMedida: 'unidad'
         });
       }
     }
   }, [productToEdit, open, reset]);
 
-  
   const onSubmit: SubmitHandler<FormValues> = (data) => {
     const productData = {
       ...data,
-      precio: Number(data.price), 
-      activo: true, 
+      precio: Number(data.precio),
     };
 
     if (productToEdit) {
-      
-      onSave({ id: productToEdit.id, ...productData });
+      onSave({ id: productToEdit.id, ...productData, activo: productToEdit.activo });
     } else {
-      
       onSave(productData);
     }
   };
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      
       <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
         <DialogTitle>{productToEdit ? 'Editar Producto' : 'Nuevo Producto'}</DialogTitle>
         <DialogContent>
@@ -77,8 +64,8 @@ export default function ProductModal({ open, onClose, onSave, productToEdit }: P
             label="Nombre del Producto"
             fullWidth
             {...register('nombre', { required: 'El nombre es obligatorio' })}
-            error={!!errors.name}
-            helperText={errors.name?.message}
+            error={!!errors.nombre}
+            helperText={errors.nombre?.message}
           />
           <TextField
             margin="dense"
@@ -91,20 +78,19 @@ export default function ProductModal({ open, onClose, onSave, productToEdit }: P
               valueAsNumber: true,
               min: { value: 0, message: 'El precio no puede ser negativo' }
             })}
-            error={!!errors.price}
-            helperText={errors.price?.message}
+            error={!!errors.precio}
+            helperText={errors.precio?.message}
           />
 
           <FormControl fullWidth margin="dense">
             <InputLabel>Unidad de Medida</InputLabel>
             <Controller
-              name="unidad_medida"
+              name="unidadMedida"
               control={control}
               defaultValue="unidad"
               render={({ field }) => (
                 <Select {...field} label="Unidad de Medida">
-                  
-                  {UNIT_OF_MEASURE_OPTIONS.map(unit => (
+                  {OPCIONES_UNIDAD_MEDIDA.map(unit => (
                     <MenuItem key={unit} value={unit}>{unit}</MenuItem>
                   ))}
                 </Select>
