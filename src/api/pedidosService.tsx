@@ -32,3 +32,12 @@ export const crearPedido = async (pedidoData: PedidoParaCrear): Promise<Pedido> 
         throw new Error('Error al crear el pedido');
     }
 };
+
+export const darDeBajaPedido = async (id: number): Promise<void> => {
+  try {
+    await apiClient.patch(`${pedidosEndpoint}/${id}/baja`);
+  } catch (error) {
+    console.error('Error al dar de baja el pedido:', error);
+    throw new Error('Error al dar de baja el pedido');
+  }
+};

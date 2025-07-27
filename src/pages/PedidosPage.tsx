@@ -1,13 +1,15 @@
 import * as React from 'react';
 import {
   Box, Typography, Button, Tabs, Tab, CircularProgress, useMediaQuery,
-  Card, CardContent, CardActions, Chip, Divider, Paper, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Collapse
+  Card, CardContent, CardActions, Chip, Divider, Paper, TableContainer, Table, TableHead, TableRow, TableCell, TableBody,
+  Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Snackbar, Alert, Slide
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { Pedido } from '../types';
-import { getPedidos, actualizarEstadoPedido, crearPedido } from '../api/pedidosService';
+import { getPedidos, actualizarEstadoPedido, crearPedido, darDeBajaPedido } from '../api/pedidosService';
 import AddIcon from '@mui/icons-material/Add';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
+import DeleteIcon from '@mui/icons-material/Delete';
 import NuevoPedidoModal from '../components/features/NuevoPedidoModal';
 import PedidoRow from '../components/features/PedidoRow';
 
@@ -21,6 +23,8 @@ export default function PedidosPage() {
   const [slidingOutId, setSlidingOutId] = React.useState<number | null>(null);
   const [modalOpen, setModalOpen] = React.useState(false);
   const [snackbar, setSnackbar] = React.useState<{ open: boolean, message: string, severity: 'success' | 'error' } | null>(null);
+  const [bajaConfirmOpen, setBajaConfirmOpen] = React.useState(false);
+  const [pedidoParaBaja, setPedidoParaBaja] = React.useState<number | null>(null);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -51,7 +55,7 @@ export default function PedidosPage() {
     setTimeout(async () => {
       try {
         await actualizarEstadoPedido(id);
-        await fetchPedidos(false); // Recarga los datos sin mostrar el spinner de carga
+        await fetchPedidos(false);
       } catch (error) {
         console.error('Error al actualizar el estado:', error);
       } finally {
@@ -68,6 +72,34 @@ export default function PedidosPage() {
       } catch (error) {
         setSnackbar({ open: true, message: 'Error al crear el pedido.', severity: 'error' });
       }
+  };
+
+  const handleOpenBajaConfirm = (id: number) => {
+    setPedidoParaBaja(id);
+    setBajaConfirmOpen(true);
+  };
+
+  const handleCloseBajaConfirm = () => {
+    setPedidoParaBaja(null);
+    setBajaConfirmOpen(false);
+  };
+
+  const handleConfirmarBaja = async () => {
+    if (pedidoParaBaja) {
+      setSlidingOutId(pedidoParaBaja);
+      setTimeout(async () => {
+        try {
+          await darDeBajaPedido(pedidoParaBaja);
+          await fetchPedidos(false);
+          setSnackbar({ open: true, message: 'Pedido dado de baja.', severity: 'success' });
+        } catch (error) {
+           setSnackbar({ open: true, message: 'Error al dar de baja el pedido.', severity: 'error' });
+        } finally {
+          setSlidingOutId(null);
+          handleCloseBajaConfirm();
+        }
+      }, 500);
+    }
   };
 
   const pedidosFiltrados = React.useMemo(() => {
@@ -89,9 +121,9 @@ export default function PedidosPage() {
     
     if (isMobile) {
       return (
-        <Box sx={{ mt: 3 }}>
+        <Box sx={{ mt: 3, overflow: 'hidden' }}>
           {pedidosFiltrados.map(pedido => (
-            <Collapse in={slidingOutId !== pedido.id} key={pedido.id}>
+            <Slide direction="left" in={slidingOutId !== pedido.id} timeout={500} key={pedido.id}>
               <Card sx={{ mb: 2 }}>
                 <CardContent>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
@@ -109,27 +141,24 @@ export default function PedidosPage() {
                     </Box>
                   ))}
                 </CardContent>
-                {pedido.estado !== 'Completado' && (
-                  <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
-                    <Button 
-                      variant="contained" 
-                      endIcon={<NavigateNextIcon />}
-                      onClick={() => handleActualizarEstado(pedido.id)}
-                      fullWidth
-                    >
+                <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
+                  {pedido.estado === 'Completado' ? (
+                    <Button startIcon={<DeleteIcon />} color="error" onClick={() => handleOpenBajaConfirm(pedido.id)} fullWidth>Dar de Baja</Button>
+                  ) : (
+                    <Button variant="contained" endIcon={<NavigateNextIcon />} onClick={() => handleActualizarEstado(pedido.id)} fullWidth>
                       {pedido.estado === 'Pendiente' ? 'Pasar a En Proceso' : 'Completar Pedido'}
                     </Button>
-                  </CardActions>
-                )}
+                  )}
+                </CardActions>
               </Card>
-            </Collapse>
+            </Slide>
           ))}
         </Box>
       )
     }
 
     return (
-       <TableContainer component={Paper} sx={{mt: 3}}>
+       <TableContainer component={Paper} sx={{mt: 3, overflow: 'hidden'}}>
         <Table aria-label="collapsible table">
             <TableHead>
                 <TableRow>
@@ -143,7 +172,7 @@ export default function PedidosPage() {
             </TableHead>
             <TableBody>
                 {pedidosFiltrados.map((pedido) => (
-                  <PedidoRow key={pedido.id} pedido={pedido} onUpdateStatus={handleActualizarEstado} isSlidingOut={slidingOutId === pedido.id} />
+                  <PedidoRow key={pedido.id} pedido={pedido} onUpdateStatus={handleActualizarEstado} onBajaClick={handleOpenBajaConfirm} isSlidingOut={slidingOutId === pedido.id}/>
                 ))}
             </TableBody>
         </Table>
@@ -171,6 +200,21 @@ export default function PedidosPage() {
       {renderContent()}
 
       <NuevoPedidoModal open={modalOpen} onClose={() => setModalOpen(false)} onSave={handleGuardarPedido} />
+
+      <Dialog open={bajaConfirmOpen} onClose={handleCloseBajaConfirm}>
+        <DialogTitle>Confirmar Baja</DialogTitle>
+        <DialogContent>
+            <DialogContentText>
+            ¿Estás seguro de que quieres dar de baja este pedido? Esta acción no se puede deshacer.
+            </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+            <Button onClick={handleCloseBajaConfirm}>Cancelar</Button>
+            <Button onClick={handleConfirmarBaja} color="error">Dar de Baja</Button>
+        </DialogActions>
+      </Dialog>
+      
+      {snackbar && (<Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar(null)}><Alert onClose={() => setSnackbar(null)} severity={snackbar.severity} sx={{ width: '100%' }}>{snackbar.message}</Alert></Snackbar>)}
     </Box>
   );
 }
