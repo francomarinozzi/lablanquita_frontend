@@ -37,3 +37,20 @@ export interface VentaParaCrear {
   formaPago: string;
   detalles: DetalleVentaParaCrear[];
 }
+
+export interface Pedido {
+  id: number;
+  idVenta: number;
+  direccion: string | null;
+  nombreCliente: string;
+  estado: 'Pendiente' | 'En proceso' | 'Completado';
+  activo: boolean;
+  detalles: DetalleVenta[];
+  fechaHora: string;
+}
+
+export interface PedidoParaCrear {
+  nombreCliente: string;
+  direccion: string;
+  venta: VentaParaCrear;
+}

@@ -4,6 +4,7 @@ import DashboardPage from "../pages/DashboardPage";
 import ProductsPage from "../pages/ProductsPage";
 import NuevaVentaPage from "../pages/NuevaVentaPage";
 import HistorialVentasPage from "../pages/HistorialVentasPage";
+import PedidosPage from "../pages/PedidosPage";
 
 export const router = createBrowserRouter([
   {
@@ -24,7 +25,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "pedidos",
-        element: <p>Aquí irá la página de Pedidos</p>,
+        element: <PedidosPage />,
       },
       {
         path: "historial",

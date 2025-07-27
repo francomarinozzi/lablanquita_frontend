@@ -6,10 +6,10 @@ import {
   useMediaQuery, Card, CardContent, CardActions, Divider
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { Producto, UnidadDeMedida } from '../types';
+import type { Producto, UnidadDeMedida } from '../types';
 import { getProducts } from '../api/productsService';
 import { crearVenta } from '../api/ventasService';
-import { VentaParaCrear, DetalleVentaParaCrear } from '../types';
+import type { VentaParaCrear, DetalleVentaParaCrear } from '../types';
 
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
@@ -264,16 +264,15 @@ export default function NuevaVentaPage() {
           <Box sx={{ width: {xs: '100%', sm: 'auto'} }}>
             <Typography variant="h6">Forma de pago</Typography>
             <ToggleButtonGroup
-              color="primary"
-              value={formaPago}
-              exclusive
-              fullWidth={isMobile}
-              onChange={handleFormaPagoChange}
-            >
-              <ToggleButton value="Efectivo">Efectivo</ToggleButton>
-              <ToggleButton value="Débito">Débito</ToggleButton>
-              <ToggleButton value="QR">QR</ToggleButton>
-            </ToggleButtonGroup>
+            color="primary"
+            value={formaPago}
+            exclusive
+            onChange={handleFormaPagoChange}
+          >
+            <ToggleButton value="Efectivo">Efectivo</ToggleButton>
+            <ToggleButton value="Tarjeta">Tarjeta</ToggleButton>
+            <ToggleButton value="Transferencia">Transferencia</ToggleButton>
+          </ToggleButtonGroup>
           </Box>
           <Box sx={{ textAlign: 'right', width: {xs: '100%', sm: 'auto'} }}>
             <Typography variant="h5" component="div" fontWeight="bold">

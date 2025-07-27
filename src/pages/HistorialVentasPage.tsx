@@ -6,7 +6,7 @@ import {
   useMediaQuery, Accordion, AccordionSummary, AccordionDetails
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { Venta } from '../types';
+import type { Venta } from '../types';
 import { getVentas, darDeBajaVenta } from '../api/ventasService';
 import VentaRow from '../components/features/VentaRow';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
