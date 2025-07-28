@@ -5,19 +5,19 @@ import {
 } from '@mui/material';
 import { useForm, SubmitHandler, Controller } from 'react-hook-form';
 import { Producto, OPCIONES_UNIDAD_MEDIDA } from '../../types';
-import { createProduct, updateProduct } from '../../api/productsService'; // <-- LLAMARÁ A LA API DIRECTAMENTE
+import { createProduct, updateProduct } from '../../api/productsService';
 
 interface ProductModalProps {
   open: boolean;
   onClose: () => void;
-  onSaveSuccess: () => void; // <-- NUEVO PROP PARA NOTIFICAR ÉXITO
+  onSaveSuccess: () => void;
   productToEdit?: Producto | null;
 }
 
 type FormValues = Omit<Producto, 'id' | 'activo'>; 
 
 export default function ProductModal({ open, onClose, onSaveSuccess, productToEdit }: ProductModalProps) {
-  const [error, setError] = React.useState<string | null>(null); // <-- ESTADO PARA EL ERROR INTERNO
+  const [error, setError] = React.useState<string | null>(null);
   const { register, handleSubmit, control, reset, formState: { errors } } = useForm<FormValues>({
     defaultValues: {
       nombre: '',
@@ -29,7 +29,7 @@ export default function ProductModal({ open, onClose, onSaveSuccess, productToEd
 
   React.useEffect(() => {
     if (open) {
-      setError(null); // Limpia el error al abrir el modal
+      setError(null);
       if (productToEdit) {
         reset(productToEdit);
       } else {
@@ -56,7 +56,7 @@ export default function ProductModal({ open, onClose, onSaveSuccess, productToEd
       } else {
         await createProduct(productData as Omit<Producto, 'id' | 'activo'>);
       }
-      onSaveSuccess(); // Notifica a la página padre que todo salió bien
+      onSaveSuccess();
       onClose();
 
     } catch (err: any) {
@@ -88,7 +88,7 @@ export default function ProductModal({ open, onClose, onSaveSuccess, productToEd
             {...register('precio', {
               required: 'El precio es obligatorio',
               valueAsNumber: true,
-              min: { value: 0, message: 'El precio no puede ser negativo' }
+              min: { value: 0.01, message: 'El precio debe ser mayor que 0' } // <-- REGLA CORREGIDA
             })}
             error={!!errors.precio}
             helperText={errors.precio?.message}
