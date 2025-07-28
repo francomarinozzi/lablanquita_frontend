@@ -7,19 +7,9 @@ import {
 } from '@mui/material';
 import { TransitionProps } from '@mui/material/transitions';
 import CloseIcon from '@mui/icons-material/Close';
-import { Producto, UnidadDeMedida, VentaParaCrear } from '../../types';
-import { getProducts } from '../../api/productsService';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { VentaParaCrear } from '../../types';
+import EditorDetallesVenta, { DetalleVentaState } from './EditorDetallesVenta';
 
-interface DetalleEnVenta {
-  producto: { id: number };
-  cantidad: number;
-  nombre: string;
-  precioUnitario: number;
-  unidadMedida: UnidadDeMedida;
-}
 
 interface NuevoPedidoModalProps {
   open: boolean;
@@ -38,26 +28,17 @@ const steps = ['Datos del Cliente', 'Armado del Pedido', 'Confirmación'];
 
 export default function NuevoPedidoModal({ open, onClose, onSave }: NuevoPedidoModalProps) {
   const [activeStep, setActiveStep] = React.useState(0);
-  const [productosDisponibles, setProductosDisponibles] = React.useState<Producto[]>([]);
-  const [detalles, setDetalles] = React.useState<DetalleEnVenta[]>([]);
+  const [detalles, setDetalles] = React.useState<DetalleVentaState[]>([]);
+  const [totalPedido, setTotalPedido] = React.useState(0);
   const [formaPago, setFormaPago] = React.useState<string>('Efectivo');
   const [datosCliente, setDatosCliente] = React.useState({ nombreCliente: '', direccion: '' });
   const [snackbar, setSnackbar] = React.useState<{ open: boolean, message: string, severity: 'success' | 'error' } | null>(null);
 
-  React.useEffect(() => {
-    if (open) {
-      const cargarProductos = async () => {
-        try {
-          const productos = await getProducts();
-          setProductosDisponibles(productos.filter(p => p.activo && p.en_stock));
-        } catch (err) {
-          console.error('No se pudieron cargar los productos.');
-        }
-      };
-      cargarProductos();
-    }
-  }, [open]);
-
+  const handleDetallesChange = (nuevosDetalles: DetalleVentaState[], nuevoTotal: number) => {
+    setDetalles(nuevosDetalles);
+    setTotalPedido(nuevoTotal);
+  };
+  
   const handleNext = () => {
     if (activeStep === 0) {
       if (!datosCliente.nombreCliente && !datosCliente.direccion) {
@@ -91,6 +72,8 @@ export default function NuevoPedidoModal({ open, onClose, onSave }: NuevoPedidoM
         let cantidadParaEnviar = item.cantidad;
         if (item.unidadMedida === 'g') {
           cantidadParaEnviar = item.cantidad / 100;
+        } else if (item.unidadMedida === 'docena') {
+          cantidadParaEnviar = item.cantidad / 12;
         }
         return {
           producto: { id: item.producto.id },
@@ -104,51 +87,6 @@ export default function NuevoPedidoModal({ open, onClose, onSave }: NuevoPedidoM
     handleResetAndClose();
   };
   
-  const calcularSubtotal = (item: DetalleEnVenta): number => {
-    if (item.unidadMedida === 'kg') return item.precioUnitario * item.cantidad;
-    if (item.unidadMedida === 'g') return item.precioUnitario * (item.cantidad / 100);
-    return item.precioUnitario * item.cantidad;
-  };
-  
-  const totalPedido = React.useMemo(() => {
-    return detalles.reduce((total, item) => total + calcularSubtotal(item), 0);
-  }, [detalles]);
-
-  const handleAgregarProducto = (producto: Producto | null) => {
-    if (!producto) return;
-    const productoExistente = detalles.find(d => d.producto.id === producto.id);
-    if (!productoExistente) {
-      setDetalles([...detalles, {
-        producto: { id: producto.id },
-        cantidad: producto.unidadMedida === 'unidad' ? 1 : 0,
-        nombre: producto.nombre,
-        precioUnitario: producto.precio,
-        unidadMedida: producto.unidadMedida,
-      }]);
-    }
-  };
-
-  const handleCantidadChange = (idProducto: number, cantidad: number) => {
-    const item = detalles.find(d => d.producto.id === idProducto);
-    if (item && item.unidadMedida !== 'unidad' && cantidad < 0) return;
-    if (cantidad <= 0 && item?.unidadMedida === 'unidad') {
-      handleEliminarProducto(idProducto);
-      return;
-    }
-    setDetalles(detalles.map(d => d.producto.id === idProducto ? { ...d, cantidad } : d));
-  };
-  
-  const handleEliminarProducto = (idProducto: number) => {
-    setDetalles(detalles.filter(d => d.producto.id !== idProducto));
-  };
-
-  const renderCeldaCantidad = (item: DetalleEnVenta) => {
-    if (item.unidadMedida === 'kg' || item.unidadMedida === 'g') {
-      return (<TextField type="number" value={item.cantidad} onChange={(e) => handleCantidadChange(item.producto.id, parseFloat(e.target.value) || 0)} sx={{ width: '140px' }} InputProps={{ endAdornment: <InputAdornment position="end">{item.unidadMedida}</InputAdornment> }} inputProps={{ step: item.unidadMedida === 'kg' ? "0.001" : "1", min: "0" }} />);
-    }
-    return (<Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IconButton size="small" onClick={() => handleCantidadChange(item.producto.id, item.cantidad - 1)}><RemoveCircleOutlineIcon /></IconButton><Typography sx={{ mx: 2, minWidth: '20px', textAlign: 'center' }}>{item.cantidad}</Typography><IconButton size="small" onClick={() => handleCantidadChange(item.producto.id, item.cantidad + 1)}><AddCircleOutlineIcon /></IconButton></Box>);
-  };
-
   const getStepContent = (step: number) => {
     switch (step) {
       case 0:
@@ -164,17 +102,11 @@ export default function NuevoPedidoModal({ open, onClose, onSave }: NuevoPedidoM
         );
       case 1:
         return (
-          <Box sx={{p: {xs: 0, sm: 2}}}>
-            <Autocomplete options={productosDisponibles} getOptionLabel={(option) => `${option.nombre} - $${option.precio.toLocaleString('es-AR')} por ${option.unidadMedida}`} onChange={(event, value) => handleAgregarProducto(value)} renderInput={(params) => <TextField {...params} label="Buscar y agregar producto" />} sx={{ mb: 3 }} value={null} isOptionEqualToValue={(option, value) => option.id === value.id} />
-            <TableContainer component={Paper}>
-                <Table>
-                    <TableHead><TableRow><TableCell>Producto</TableCell><TableCell align="center">Cantidad</TableCell><TableCell align="right">Subtotal</TableCell><TableCell align="center">Quitar</TableCell></TableRow></TableHead>
-                    <TableBody>
-                        {detalles.map((item) => (<TableRow key={item.producto.id}><TableCell>{item.nombre}</TableCell><TableCell align="center">{renderCeldaCantidad(item)}</TableCell><TableCell align="right">${calcularSubtotal(item).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell><TableCell align="center"><IconButton color="error" onClick={() => handleEliminarProducto(item.producto.id)}><DeleteIcon /></IconButton></TableCell></TableRow>))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-          </Box>
+          <EditorDetallesVenta 
+            onDetallesChange={handleDetallesChange} 
+            onSaveProductSuccess={() => setSnackbar({ open: true, message: 'Producto creado con éxito.', severity: 'success' })}
+            initialDetalles={detalles}
+          />
         );
       case 2:
         return (
@@ -186,9 +118,9 @@ export default function NuevoPedidoModal({ open, onClose, onSave }: NuevoPedidoM
                 </Paper>
                 <TableContainer component={Paper} variant="outlined">
                     <Table size="small">
-                        <TableHead><TableRow><TableCell>Producto</TableCell><TableCell align="right">Cant.</TableCell><TableCell align="right">Subtotal</TableCell></TableRow></TableHead>
+                        <TableHead><TableRow><TableCell>Producto</TableCell><TableCell align="right">Cant.</TableCell></TableRow></TableHead>
                         <TableBody>
-                            {detalles.map((item) => (<TableRow key={item.producto.id}><TableCell>{item.nombre}</TableCell><TableCell align="right">{item.cantidad.toLocaleString('es-AR')}{item.unidadMedida !== 'unidad' ? item.unidadMedida : ''}</TableCell><TableCell align="right">${calcularSubtotal(item).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell></TableRow>))}
+                            {detalles.map((item) => (<TableRow key={item.producto.id}><TableCell>{item.nombre}</TableCell><TableCell align="right">{item.cantidad.toLocaleString('es-AR')}{item.unidadMedida !== 'unidad' ? ` ${item.unidadMedida}` : ''}</TableCell></TableRow>))}
                         </TableBody>
                     </Table>
                 </TableContainer>

@@ -1,5 +1,6 @@
-import apiClient from './axiosConfig';
+import apiClient from './axiosConfig'; 
 import type { Producto } from '../types';
+import { AxiosError } from 'axios';
 
 const productsEndpoint = '/productos';
 
@@ -19,6 +20,9 @@ export const createProduct = async (productData: Omit<Producto, 'id' | 'activo'>
     return response.data;
   } catch (error) {
     console.error('Error creating product:', error);
+    if (error instanceof AxiosError && error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+    }
     throw new Error('Error al crear el producto');
   }
 };

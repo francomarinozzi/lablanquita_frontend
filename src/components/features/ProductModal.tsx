@@ -1,21 +1,23 @@
 import * as React from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField,
-  FormControlLabel, Switch, Box, FormControl, InputLabel, Select, MenuItem
+  FormControlLabel, Switch, Box, FormControl, InputLabel, Select, MenuItem, Alert
 } from '@mui/material';
 import { useForm, SubmitHandler, Controller } from 'react-hook-form';
 import { Producto, OPCIONES_UNIDAD_MEDIDA } from '../../types';
+import { createProduct, updateProduct } from '../../api/productsService'; // <-- LLAMARÁ A LA API DIRECTAMENTE
 
 interface ProductModalProps {
   open: boolean;
   onClose: () => void;
-  onSave: (data: Omit<Producto, 'id' | 'activo'> | Producto) => void;
+  onSaveSuccess: () => void; // <-- NUEVO PROP PARA NOTIFICAR ÉXITO
   productToEdit?: Producto | null;
 }
 
-type FormValues = Omit<Producto, 'id' | 'activo'>;
+type FormValues = Omit<Producto, 'id' | 'activo'>; 
 
-export default function ProductModal({ open, onClose, onSave, productToEdit }: ProductModalProps) {
+export default function ProductModal({ open, onClose, onSaveSuccess, productToEdit }: ProductModalProps) {
+  const [error, setError] = React.useState<string | null>(null); // <-- ESTADO PARA EL ERROR INTERNO
   const { register, handleSubmit, control, reset, formState: { errors } } = useForm<FormValues>({
     defaultValues: {
       nombre: '',
@@ -27,6 +29,7 @@ export default function ProductModal({ open, onClose, onSave, productToEdit }: P
 
   React.useEffect(() => {
     if (open) {
+      setError(null); // Limpia el error al abrir el modal
       if (productToEdit) {
         reset(productToEdit);
       } else {
@@ -40,16 +43,24 @@ export default function ProductModal({ open, onClose, onSave, productToEdit }: P
     }
   }, [productToEdit, open, reset]);
 
-  const onSubmit: SubmitHandler<FormValues> = (data) => {
-    const productData = {
-      ...data,
-      precio: Number(data.precio),
-    };
+  const onSubmit: SubmitHandler<FormValues> = async (data) => {
+    setError(null);
+    try {
+      const productData = {
+        ...data,
+        precio: Number(data.precio),
+      };
 
-    if (productToEdit) {
-      onSave({ id: productToEdit.id, ...productData, activo: productToEdit.activo });
-    } else {
-      onSave(productData);
+      if (productToEdit) {
+        await updateProduct(productToEdit.id, productData);
+      } else {
+        await createProduct(productData as Omit<Producto, 'id' | 'activo'>);
+      }
+      onSaveSuccess(); // Notifica a la página padre que todo salió bien
+      onClose();
+
+    } catch (err: any) {
+      setError(err.message || 'Ocurrió un error inesperado.');
     }
   };
 
@@ -58,6 +69,7 @@ export default function ProductModal({ open, onClose, onSave, productToEdit }: P
       <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
         <DialogTitle>{productToEdit ? 'Editar Producto' : 'Nuevo Producto'}</DialogTitle>
         <DialogContent>
+          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
           <TextField
             autoFocus
             margin="dense"
@@ -81,7 +93,6 @@ export default function ProductModal({ open, onClose, onSave, productToEdit }: P
             error={!!errors.precio}
             helperText={errors.precio?.message}
           />
-
           <FormControl fullWidth margin="dense">
             <InputLabel>Unidad de Medida</InputLabel>
             <Controller
@@ -97,7 +108,6 @@ export default function ProductModal({ open, onClose, onSave, productToEdit }: P
               )}
             />
           </FormControl>
-
           <Controller
             name="en_stock"
             control={control}

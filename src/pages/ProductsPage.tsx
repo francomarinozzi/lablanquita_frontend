@@ -3,7 +3,7 @@ import {
   Box, Typography, Button, TextField, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, Paper, IconButton, CircularProgress,
   useMediaQuery, Card, CardContent, CardActions, Dialog, DialogActions,
-  DialogContent, DialogContentText, DialogTitle, Switch, FormControlLabel
+  DialogContent, DialogContentText, DialogTitle, Switch, Snackbar, Alert
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import type { Producto } from '../types';
@@ -23,6 +23,7 @@ export default function ProductsPage() {
   const [productToEdit, setProductToEdit] = React.useState<Producto | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = React.useState(false);
   const [productToDeleteId, setProductToDeleteId] = React.useState<number | null>(null);
+  const [snackbar, setSnackbar] = React.useState<{ open: boolean, message: string, severity: 'success' | 'error' } | null>(null);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -61,20 +62,10 @@ export default function ProductsPage() {
     setProductToEdit(null);
   };
 
-  const handleSaveProduct = async (data: Omit<Producto, 'id' | 'activo'> | Producto) => {
-    try {
-      if ('id' in data && data.id) {
-        await updateProduct(data.id, data);
-      } else {
-        await createProduct(data as Omit<Producto, 'id' | 'activo'>);
-      }
-      fetchProducts();
-    } catch (err) {
-      console.error(err);
-      setError('Error al guardar el producto.');
-    } finally {
-      handleCloseModal();
-    }
+  const handleSaveSuccess = () => {
+    fetchProducts();
+    setSnackbar({ open: true, message: 'Producto guardado con éxito.', severity: 'success' });
+    handleCloseModal();
   };
 
   const handleDeleteClick = (productId: number) => {
@@ -92,9 +83,10 @@ export default function ProductsPage() {
     try {
       await deleteProduct(productToDeleteId);
       fetchProducts();
+      setSnackbar({ open: true, message: 'Producto dado de baja con éxito.', severity: 'success' });
     } catch (err) {
       console.error(err);
-      setError('Error al dar de baja el producto');
+      setSnackbar({ open: true, message: 'Error al dar de baja el producto', severity: 'error' });
     } finally {
       handleCloseConfirm();
     }
@@ -109,7 +101,7 @@ export default function ProductsPage() {
     try {
       await updateProductStock(productId);
     } catch (err) {
-      setError('No se pudo actualizar el stock. Reintentando...');
+      setSnackbar({ open: true, message: 'No se pudo actualizar el stock.', severity: 'error' });
       fetchProducts();
     }
   };
@@ -170,16 +162,11 @@ export default function ProductsPage() {
             <Typography variant="h6">{product.nombre}</Typography>
             <Typography>Precio: ${product.precio.toLocaleString('es-AR')}</Typography>
             <Typography>Unidad: {product.unidadMedida}</Typography>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={product.en_stock}
-                  onChange={() => handleToggleStock(product.id)}
-                />
-              }
-              label="En Stock"
-              sx={{ pt: 1 }}
-            />
+             <Switch
+                checked={product.en_stock}
+                onChange={() => handleToggleStock(product.id)}
+                color="primary"
+              />
           </CardContent>
           <CardActions sx={{ justifyContent: 'flex-end' }}>
             <Button startIcon={<EditIcon />} onClick={() => handleOpenModal(product)}>Editar</Button>
@@ -214,7 +201,7 @@ export default function ProductsPage() {
         <ProductModal
           open={isModalOpen}
           onClose={handleCloseModal}
-          onSave={handleSaveProduct}
+          onSaveSuccess={handleSaveSuccess}
           productToEdit={productToEdit}
         />
       )}
@@ -226,7 +213,7 @@ export default function ProductsPage() {
         <DialogTitle>Confirmar baja</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            ¿Estás seguro de que quieres dar de baja este producto? Esta acción no se puede deshacer.
+            ¿Estás seguro de que quieres dar de baja este producto?
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -236,6 +223,14 @@ export default function ProductsPage() {
           </Button>
         </DialogActions>
       </Dialog>
+      
+      {snackbar && (
+        <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={() => setSnackbar(null)}>
+          <Alert onClose={() => setSnackbar(null)} severity={snackbar.severity} sx={{ width: '100%' }}>
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      )}
     </Box>
   );
 }

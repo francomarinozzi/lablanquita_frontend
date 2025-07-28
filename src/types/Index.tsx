@@ -1,6 +1,7 @@
-export const OPCIONES_UNIDAD_MEDIDA = ['unidad', 'kg', 'g'] as const;
+export const OPCIONES_UNIDAD_MEDIDA = ['unidad', 'kg', 'g', 'docena'] as const;
 
 export type UnidadDeMedida = typeof OPCIONES_UNIDAD_MEDIDA[number];
+
 
 export interface Producto {
   id: number;
