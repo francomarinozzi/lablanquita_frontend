@@ -1,31 +1,49 @@
 import * as React from 'react';
-import { Grid, Typography, Box, Card, CardContent } from '@mui/material';
+import { Grid, Typography, Box, Card, CardContent, List, ListItem, ListItemText, ListItemIcon, CircularProgress } from '@mui/material';
 import PointOfSaleIcon from '@mui/icons-material/PointOfSale';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import { getVentas } from '../api/ventasService';
 import { getProducts } from '../api/productsService';
-import { Venta, Producto } from '../types';
+import { getPedidos } from '../api/pedidosService';
+import { Venta, Producto, Pedido } from '../types';
 import DashboardStatCard from '../components/features/DashboardStatCard';
+import GraficoVentasSemanales from '../components/features/GraficoVentasSemanales';
 import backgroundImage from '../assets/background-dashboard.jpg';
+
+interface TopProducto {
+    nombre: string;
+    cantidad: number;
+}
+
+interface DatosGrafico {
+    fecha: string;
+    total: number;
+}
 
 export default function DashboardPage() {
   const [ventasHoy, setVentasHoy] = React.useState({ total: 0, cantidad: 0 });
   const [productosActivos, setProductosActivos] = React.useState(0);
+  const [pedidosPendientes, setPedidosPendientes] = React.useState(0);
+  const [topProductos, setTopProductos] = React.useState<TopProducto[]>([]);
+  const [datosGrafico, setDatosGrafico] = React.useState<DatosGrafico[]>([]);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
     const fetchData = async () => {
       try {
-        const [ventasData, productosData] = await Promise.all([getVentas(), getProducts()]);
+        const [ventasData, productosData, pedidosData] = await Promise.all([
+            getVentas(), 
+            getProducts(),
+            getPedidos()
+        ]);
         
-        const hoy = new Date();
-        const inicioHoy = new Date(hoy.setHours(0, 0, 0, 0));
-        const finHoy = new Date(hoy.setHours(23, 59, 59, 999));
+        const inicioHoy = new Date(new Date().setHours(0, 0, 0, 0));
 
         const ventasDelDia = ventasData.filter(venta => {
           const fechaVenta = new Date(venta.fechaHora);
-          return venta.activo && fechaVenta >= inicioHoy && fechaVenta <= finHoy;
+          return venta.activo && fechaVenta >= inicioHoy;
         });
 
         const totalRecaudado = ventasDelDia.reduce((sum, venta) => sum + venta.total, 0);
@@ -33,6 +51,50 @@ export default function DashboardPage() {
 
         const productosEnStock = productosData.filter(p => p.activo && p.en_stock).length;
         setProductosActivos(productosEnStock);
+
+        const pendientes = pedidosData.filter(p => p.activo && (p.estado === 'Pendiente' || p.estado === 'En proceso')).length;
+        setPedidosPendientes(pendientes);
+
+        const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+        const datosTemporales: { [key: string]: number } = {};
+        const ultimos7dias: DatosGrafico[] = [];
+
+        for (let i = 6; i >= 0; i--) {
+            const fecha = new Date();
+            fecha.setDate(fecha.getDate() - i);
+            const dia = diasSemana[fecha.getDay()];
+            const fechaCorta = `${dia} ${fecha.getDate()}`;
+            datosTemporales[fecha.toISOString().split('T')[0]] = 0;
+            ultimos7dias.push({ fecha: fechaCorta, total: 0 });
+        }
+
+        ventasData.forEach(venta => {
+            const fechaVenta = venta.fechaHora.split('T')[0];
+            if (datosTemporales.hasOwnProperty(fechaVenta)) {
+                datosTemporales[fechaVenta] += venta.total;
+            }
+        });
+        
+        ultimos7dias.forEach((dia, index) => {
+            const fechaISO = Object.keys(datosTemporales)[index];
+            dia.total = datosTemporales[fechaISO];
+        });
+
+        setDatosGrafico(ultimos7dias);
+
+        const hace7Dias = new Date();
+        hace7Dias.setDate(hace7Dias.getDate() - 7);
+        const ventasUltimaSemana = ventasData.filter(venta => new Date(venta.fechaHora) >= hace7Dias && venta.activo);
+        const conteoProductos = new Map<string, number>();
+        ventasUltimaSemana.forEach(venta => {
+            venta.detalles.forEach(detalle => {
+                conteoProductos.set(detalle.nombreProducto, (conteoProductos.get(detalle.nombreProducto) || 0) + detalle.cantidad);
+            });
+        });
+        const productosOrdenados = Array.from(conteoProductos.entries())
+            .map(([nombre, cantidad]) => ({ nombre, cantidad }))
+            .sort((a, b) => b.cantidad - a.cantidad);
+        setTopProductos(productosOrdenados.slice(0, 5));
 
       } catch (error) {
         console.error("Error al cargar los datos del dashboard:", error);
@@ -49,10 +111,9 @@ export default function DashboardPage() {
       sx={{
         position: 'relative',
         zIndex: 1,
-        // Expande el contenedor para cubrir el padding del layout
         margin: theme => `-${theme.spacing(3)}`, 
         padding: theme => theme.spacing(3),
-        height: '100%',
+        minHeight: 'calc(100vh - 64px)',
         '&::before': {
           content: '""',
           position: 'absolute',
@@ -63,7 +124,7 @@ export default function DashboardPage() {
           backgroundImage: `url(${backgroundImage})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          opacity: 0.5,
+          opacity: 0.1,
           zIndex: -1,
         },
       }}
@@ -73,65 +134,38 @@ export default function DashboardPage() {
       </Typography>
       
       <Grid container spacing={3}>
-        <Grid item xs={12} sm={6} md={4}>
-          <DashboardStatCard
-            title="Ventas del Día"
-            value={`$${ventasHoy.total.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`}
-            icon={<PointOfSaleIcon sx={{ fontSize: 40 }} />}
-            loading={loading}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={4}>
-          <DashboardStatCard
-            title="Cantidad de Ventas (Hoy)"
-            value={ventasHoy.cantidad}
-            icon={<ShoppingCartIcon sx={{ fontSize: 40 }} />}
-            loading={loading}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={4}>
-          <DashboardStatCard
-            title="Productos Activos en Stock"
-            value={productosActivos}
-            icon={<Inventory2Icon sx={{ fontSize: 40 }} />}
-            loading={loading}
-          />
-        </Grid>
+        <Grid item xs={12} sm={6} lg={3}><DashboardStatCard title="Ventas del Día" value={`$${ventasHoy.total.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`} icon={<PointOfSaleIcon sx={{ fontSize: 40 }} />} loading={loading} /></Grid>
+        <Grid item xs={12} sm={6} lg={3}><DashboardStatCard title="Cantidad de Ventas (Hoy)" value={ventasHoy.cantidad} icon={<ShoppingCartIcon sx={{ fontSize: 40 }} />} loading={loading} /></Grid>
+        <Grid item xs={12} sm={6} lg={3}><DashboardStatCard title="Productos en Stock" value={productosActivos} icon={<Inventory2Icon sx={{ fontSize: 40 }} />} loading={loading} /></Grid>
+        <Grid item xs={12} sm={6} lg={3}><DashboardStatCard title="Pedidos Pendientes" value={pedidosPendientes} icon={<PendingActionsIcon sx={{ fontSize: 40 }} />} loading={loading} /></Grid>
       </Grid>
 
       <Typography variant="h5" gutterBottom sx={{ mt: 5 }}>
-        Ideas para el Futuro
+        Análisis y Tendencias
       </Typography>
       <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-            <Card>
+        <Grid item xs={12} md={4}>
+            <Card sx={{ height: '100%' }}>
                 <CardContent>
                     <Typography variant="h6">Productos Más Vendidos</Typography>
-                    <Typography color="text.secondary">
-                        Una lista o gráfico con los 5 productos más populares de la semana para saber qué es lo que más se está moviendo.
-                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{mb: 1}}>(Últimos 7 días)</Typography>
+                    {loading ? <CircularProgress sx={{mt: 2}}/> : (
+                        <List dense>
+                            {topProductos.map((prod, index) => (
+                                <ListItem key={prod.nombre} sx={{py: 0}}>
+                                    <ListItemIcon sx={{minWidth: 35}}>
+                                        <Typography variant="h6" color="text.secondary">{index + 1}</Typography>
+                                    </ListItemIcon>
+                                    <ListItemText primary={prod.nombre} />
+                                </ListItem>
+                            ))}
+                        </List>
+                    )}
                 </CardContent>
             </Card>
         </Grid>
-        <Grid item xs={12} md={6}>
-            <Card>
-                <CardContent>
-                    <Typography variant="h6">Pedidos Pendientes</Typography>
-                    <Typography color="text.secondary">
-                        Un contador que muestre cuántos pedidos están "Pendientes" o "En Proceso" para tener un control rápido de la producción.
-                    </Typography>
-                </CardContent>
-            </Card>
-        </Grid>
-         <Grid item xs={12}>
-            <Card>
-                <CardContent>
-                    <Typography variant="h6">Gráfico de Ventas Semanales</Typography>
-                    <Typography color="text.secondary">
-                        Un gráfico de barras simple que muestre el total recaudado en cada uno de los últimos 7 días para visualizar tendencias.
-                    </Typography>
-                </CardContent>
-            </Card>
+        <Grid item xs={12} md={8}>
+            <GraficoVentasSemanales data={datosGrafico} loading={loading} />
         </Grid>
       </Grid>
     </Box>

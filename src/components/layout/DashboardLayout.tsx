@@ -18,7 +18,7 @@ const drawerWidth = 240;
 
 
 const navItems = [
-    { text: 'Dashboard', path: '/', icon: <DashboardIcon /> },
+    { text: 'Estadísticas', path: '/', icon: <DashboardIcon /> },
     { text: 'Nueva venta', path: '/nueva-venta', icon: <ShoppingCartIcon /> },
     { text: 'Productos', path: '/productos', icon: <InventoryIcon /> },
     { text: 'Historial de ventas', path: '/historial', icon: <ReceiptLongIcon /> },
@@ -27,13 +27,13 @@ const navItems = [
 
 export default function DashboardLayout() {
   const [mobileOpen, setMobileOpen] = React.useState(false);
-  const location = useLocation(); // Hook para saber en qué página estamos
+  const location = useLocation();
 
   const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
 
 
   const currentPage = navItems.find(item => item.path === location.pathname);
-  const pageTitle = currentPage ? currentPage.text : 'Dashboard';
+  const pageTitle = currentPage ? currentPage.text : 'Estadísticas';
 
   const drawerContent = (
     <div>
@@ -46,7 +46,6 @@ export default function DashboardLayout() {
       <List>
         {navItems.map((item) => (
           <ListItem key={item.text} disablePadding>
-            {/* Hacemos que el botón se comporte como un Link y resalte la página activa */}
             <ListItemButton
               component={Link}
               to={item.path}
@@ -77,7 +76,7 @@ export default function DashboardLayout() {
         position="fixed"
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
-          ml: { sm: `${drawerWidth}px` },
+          ml: { sm: `${drawerWidth}px)` },
           backgroundColor: 'background.default',
           color: 'text.primary',
           boxShadow: 'none',

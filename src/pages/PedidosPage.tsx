@@ -91,9 +91,9 @@ export default function PedidosPage() {
         try {
           await darDeBajaPedido(pedidoParaBaja);
           await fetchPedidos(false);
-          setSnackbar({ open: true, message: 'Pedido dado de baja.', severity: 'success' });
+          setSnackbar({ open: true, message: 'Pedido eliminado.', severity: 'success' });
         } catch (error) {
-           setSnackbar({ open: true, message: 'Error al dar de baja el pedido.', severity: 'error' });
+           setSnackbar({ open: true, message: 'Error al eliminar el pedido.', severity: 'error' });
         } finally {
           setSlidingOutId(null);
           handleCloseBajaConfirm();
@@ -143,7 +143,7 @@ export default function PedidosPage() {
                 </CardContent>
                 <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
                   {pedido.estado === 'Completado' ? (
-                    <Button startIcon={<DeleteIcon />} color="error" onClick={() => handleOpenBajaConfirm(pedido.id)} fullWidth>Dar de Baja</Button>
+                    <Button startIcon={<DeleteIcon />} color="error" onClick={() => handleOpenBajaConfirm(pedido.id)} fullWidth>Eliminar</Button>
                   ) : (
                     <Button variant="contained" endIcon={<NavigateNextIcon />} onClick={() => handleActualizarEstado(pedido.id)} fullWidth>
                       {pedido.estado === 'Pendiente' ? 'Pasar a En Proceso' : 'Completar Pedido'}
@@ -205,12 +205,12 @@ export default function PedidosPage() {
         <DialogTitle>Confirmar Baja</DialogTitle>
         <DialogContent>
             <DialogContentText>
-            ¿Estás seguro de que quieres dar de baja este pedido? Esta acción no se puede deshacer.
+            ¿Estás seguro de que quieres eliminar este pedido? Esta acción no se puede deshacer.
             </DialogContentText>
         </DialogContent>
         <DialogActions>
             <Button onClick={handleCloseBajaConfirm}>Cancelar</Button>
-            <Button onClick={handleConfirmarBaja} color="error">Dar de Baja</Button>
+            <Button onClick={handleConfirmarBaja} color="error">Eliminar</Button>
         </DialogActions>
       </Dialog>
       
