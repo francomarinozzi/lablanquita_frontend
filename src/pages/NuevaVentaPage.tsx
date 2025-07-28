@@ -13,6 +13,7 @@ export default function NuevaVentaPage() {
   const [totalVenta, setTotalVenta] = React.useState(0);
   const [formaPago, setFormaPago] = React.useState<string | null>('Efectivo');
   const [snackbar, setSnackbar] = React.useState<{ open: boolean, message: string, severity: 'success' | 'error' } | null>(null);
+  const [editorKey, setEditorKey] = React.useState(Date.now()); // <-- Clave para forzar el reseteo
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -27,15 +28,20 @@ export default function NuevaVentaPage() {
   };
 
   const resetVenta = () => {
-    // Para resetear el componente hijo, le pasamos un array vacío a través de una key cambiante o un estado
-    // Por simplicidad, aquí solo reseteamos el estado del padre. El hijo debería resetearse si se cierra y abre.
     setDetalles([]);
     setTotalVenta(0);
     setFormaPago('Efectivo');
+    setEditorKey(Date.now()); // <-- Cambiamos la key para resetear el componente hijo
   };
 
   const handleFinalizarVenta = async () => {
     const detallesValidos = detalles.filter(d => d.cantidad > 0);
+    
+    if (detalles.length > 0 && detallesValidos.length !== detalles.length) {
+        setSnackbar({ open: true, message: 'Todos los productos deben tener una cantidad mayor a cero.', severity: 'error' });
+        return;
+    }
+
     if (detallesValidos.length === 0) {
         setSnackbar({ open: true, message: 'Agregue productos y cantidades válidas.', severity: 'error' });
         return;
@@ -59,7 +65,6 @@ export default function NuevaVentaPage() {
       await crearVenta(venta);
       setSnackbar({ open: true, message: 'Venta registrada con éxito.', severity: 'success' });
       resetVenta();
-      // Forzamos un reseteo del componente hijo cambiando su key
     } catch (err) {
       setSnackbar({ open: true, message: 'Error al registrar la venta.', severity: 'error' });
     }
@@ -70,9 +75,9 @@ export default function NuevaVentaPage() {
       <Typography variant="h4" component="h1" gutterBottom>Nueva Venta</Typography>
       
       <EditorDetallesVenta 
+        key={editorKey} // <-- Pasamos la key aquí
         onDetallesChange={handleDetallesChange}
         onSaveProductSuccess={() => setSnackbar({ open: true, message: 'Producto creado con éxito.', severity: 'success' })}
-        initialDetalles={detalles}
       />
 
       <Paper sx={{ p: { xs: 2, md: 3 }, mt: 3 }}>

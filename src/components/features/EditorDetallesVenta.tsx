@@ -16,7 +16,7 @@ import AddIcon from '@mui/icons-material/Add';
 
 export interface DetalleVentaState {
   producto: { id: number };
-  cantidad: number;
+  cantidad: number | string;
   nombre: string;
   precioUnitario: number;
   unidadMedida: UnidadDeMedida;
@@ -25,11 +25,12 @@ export interface DetalleVentaState {
 interface EditorDetallesVentaProps {
   onDetallesChange: (detalles: DetalleVentaState[], total: number) => void;
   onSaveProductSuccess: () => void;
+  initialDetalles?: DetalleVentaState[];
 }
 
-export default function EditorDetallesVenta({ onDetallesChange, onSaveProductSuccess }: EditorDetallesVentaProps) {
+export default function EditorDetallesVenta({ onDetallesChange, onSaveProductSuccess, initialDetalles = [] }: EditorDetallesVentaProps) {
   const [productosDisponibles, setProductosDisponibles] = React.useState<Producto[]>([]);
-  const [detalles, setDetalles] = React.useState<DetalleVentaState[]>([]);
+  const [detalles, setDetalles] = React.useState<DetalleVentaState[]>(initialDetalles);
   const [isProductModalOpen, setIsProductModalOpen] = React.useState(false);
 
   const theme = useTheme();
@@ -48,38 +49,60 @@ export default function EditorDetallesVenta({ onDetallesChange, onSaveProductSuc
     cargarProductos();
   }, [cargarProductos]);
 
+  const getCantidadNumerica = (cantidad: number | string): number => {
+    if (typeof cantidad === 'string' && cantidad.trim() === '') return 0;
+    return Number(cantidad);
+  }
+
   const calcularSubtotal = (item: DetalleVentaState): number => {
-    if (item.unidadMedida === 'kg') return item.precioUnitario * item.cantidad;
-    if (item.unidadMedida === 'g') return item.precioUnitario * (item.cantidad / 100);
-    if (item.unidadMedida === 'docena') return (item.precioUnitario / 12) * item.cantidad;
-    return item.precioUnitario * item.cantidad;
+    const cantidad = getCantidadNumerica(item.cantidad);
+    if (item.unidadMedida === 'kg') return item.precioUnitario * cantidad;
+    if (item.unidadMedida === 'g') return item.precioUnitario * (cantidad / 100);
+    if (item.unidadMedida === 'docena') return (item.precioUnitario / 12) * cantidad;
+    return item.precioUnitario * cantidad;
   };
   
   React.useEffect(() => {
-    const total = detalles.reduce((sum, item) => sum + calcularSubtotal(item), 0);
-    onDetallesChange(detalles, total);
+    const detallesNumericos = detalles.map(d => ({...d, cantidad: getCantidadNumerica(d.cantidad)}));
+    const total = detallesNumericos.reduce((sum, item) => sum + calcularSubtotal(item), 0);
+    onDetallesChange(detallesNumericos, total);
   }, [detalles, onDetallesChange]);
   
   const handleAgregarProducto = (producto: Producto | null) => {
     if (!producto || detalles.find(d => d.producto.id === producto.id)) return;
+    const esPorUnidad = producto.unidadMedida === 'unidad' || producto.unidadMedida === 'docena';
     setDetalles([...detalles, {
       producto: { id: producto.id },
-      cantidad: (producto.unidadMedida === 'unidad' || producto.unidadMedida === 'docena') ? 1 : 0,
+      cantidad: esPorUnidad ? 1 : '',
       nombre: producto.nombre,
       precioUnitario: producto.precio,
       unidadMedida: producto.unidadMedida,
     }]);
   };
 
-  const handleCantidadChange = (idProducto: number, cantidad: number) => {
-    const item = detalles.find(d => d.producto.id === idProducto);
-    if (cantidad < 0) return;
-    if (cantidad === 0 && (item?.unidadMedida === 'unidad' || item?.unidadMedida === 'docena')) {
-      handleEliminarProducto(idProducto);
-      return;
-    }
-    setDetalles(detalles.map(d => d.producto.id === idProducto ? { ...d, cantidad } : d));
+  const handleCantidadChange = (idProducto: number, cantidad: number | string) => {
+    setDetalles(detalles.map(d => d.producto.id === idProducto ? { ...d, cantidad: cantidad } : d));
   };
+  
+  const handleCantidadBlur = (idProducto: number, cantidad: number | string) => {
+      const cantidadNumerica = getCantidadNumerica(cantidad);
+       setDetalles(detalles.map(d => d.producto.id === idProducto ? { ...d, cantidad: cantidadNumerica } : d));
+  }
+  
+  const handleIncrement = (item: DetalleVentaState) => {
+    const cantidadActual = getCantidadNumerica(item.cantidad);
+    handleCantidadChange(item.producto.id, cantidadActual + 1);
+  }
+
+  const handleDecrement = (item: DetalleVentaState) => {
+    const cantidadActual = getCantidadNumerica(item.cantidad);
+    const nuevaCantidad = cantidadActual - 1;
+    if (nuevaCantidad <= 0) {
+        handleEliminarProducto(item.producto.id);
+    } else {
+        handleCantidadChange(item.producto.id, nuevaCantidad);
+    }
+  }
 
   const handleEliminarProducto = (idProducto: number) => {
     setDetalles(detalles.filter(d => d.producto.id !== idProducto));
@@ -93,9 +116,9 @@ export default function EditorDetallesVenta({ onDetallesChange, onSaveProductSuc
 
   const renderCeldaCantidad = (item: DetalleVentaState) => {
     if (item.unidadMedida === 'kg' || item.unidadMedida === 'g') {
-        return <TextField type="number" value={item.cantidad || ''} onChange={(e) => handleCantidadChange(item.producto.id, parseFloat(e.target.value) || 0)} sx={{ width: '140px' }} InputProps={{ endAdornment: <InputAdornment position="end">{item.unidadMedida}</InputAdornment> }} inputProps={{ step: "0.001", min: "0" }} />;
+        return <TextField type="number" value={item.cantidad} onBlur={() => handleCantidadBlur(item.producto.id, item.cantidad)} onChange={(e) => handleCantidadChange(item.producto.id, e.target.value)} sx={{ width: '140px' }} InputProps={{ endAdornment: <InputAdornment position="end">{item.unidadMedida}</InputAdornment> }} inputProps={{ step: "0.001", min: "0" }} />;
     }
-    return <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IconButton size="small" onClick={() => handleCantidadChange(item.producto.id, item.cantidad - 1)}><RemoveCircleOutlineIcon /></IconButton><Typography sx={{ mx: 2, minWidth: '20px', textAlign: 'center' }}>{item.cantidad}</Typography><IconButton size="small" onClick={() => handleCantidadChange(item.producto.id, item.cantidad + 1)}><AddCircleOutlineIcon /></IconButton></Box>;
+    return <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><IconButton size="small" onClick={() => handleDecrement(item)}><RemoveCircleOutlineIcon /></IconButton><Typography sx={{ mx: 2, minWidth: '20px', textAlign: 'center' }}>{getCantidadNumerica(item.cantidad)}</Typography><IconButton size="small" onClick={() => handleIncrement(item)}><AddCircleOutlineIcon /></IconButton></Box>;
   };
   
   const renderDesktopTable = () => (
