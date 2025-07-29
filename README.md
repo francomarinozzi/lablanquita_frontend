@@ -13,8 +13,8 @@ El proyecto está dividido en un **backend** construido con Spring Boot y un **f
 * **Sistema de Ventas:** Una sección dedicada para registrar ventas de mostrador, con un buscador de productos y cálculo automático de precios según la unidad de medida.
 * **Gestión de Pedidos:** Un sistema de pestañas para organizar los pedidos.
 * **Historial de Ventas:** Una tabla de datos con todas las ventas registradas que permite la visualización de detalles.
-* **Diseño Adaptable (Responsive):** La interfaz está diseñada para funcionar de manera fluida tanto en computadoras de escritorio como en dispositivos móviles.
-* **Documentación con Swagger:** El backend integra Swagger para una documentación de la API.
+* **Diseño Responsive:** La interfaz está diseñada para funcionar de manera fluida tanto en computadoras de escritorio como en dispositivos móviles.
+
 
 ---
 
