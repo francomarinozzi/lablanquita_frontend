@@ -31,7 +31,7 @@ Instrucciones para levantar el proyecto.
 
 1.  **Navegar a la carpeta del frontend:**
     ```bash
-    cd ruta/a/tu/frontend
+    cd ruta/lablanquita_frontend
     ```
 
 2.  **Instalar Dependencias:**
