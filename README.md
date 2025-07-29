@@ -1,74 +1,69 @@
-<<<<<<< HEAD
-# React + TypeScript + Vite
+# 🍝 La Blanquita - Sistema de Gestión
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Sistema de gestión para "La Blanquita". Esta es una aplicación web completa diseñada para administrar de manera eficiente una fábrica de pastas, cubriendo desde la gestión de productos y ventas hasta el seguimiento de pedidos.
 
-Currently, two official plugins are available:
+El proyecto está dividido en un **backend** construido con Spring Boot y un **frontend** desarrollado con React y TypeScript.
+ 
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ✨ Características Principales
 
-## Expanding the ESLint configuration
+* **Estadísticas en Tiempo Real:** Un dashboard principal que ofrece una vista rápida del negocio, incluyendo ventas del día, productos más vendidos, pedidos pendientes y un gráfico de rendimiento semanal.
+* **Gestión de Productos:** Interfaz para crear, leer, actualizar y dar de baja productos. Permite manejar el stock y configurar precios.
+* **Sistema de Ventas:** Una sección dedicada para registrar ventas de mostrador, con un buscador de productos y cálculo automático de precios según la unidad de medida.
+* **Gestión de Pedidos:** Un sistema de pestañas para organizar los pedidos.
+* **Historial de Ventas:** Una tabla de datos con todas las ventas registradas que permite la visualización de detalles.
+* **Diseño Adaptable (Responsive):** La interfaz está diseñada para funcionar de manera fluida tanto en computadoras de escritorio como en dispositivos móviles.
+* **Documentación con Swagger:** El backend integra Swagger para una documentación de la API.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 🚀 Puesta en Marcha
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+Instrucciones para levantar el proyecto.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### Prerrequisitos
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+* **Node.js** (v18 o superior).
+* La **API del backend debe estar en ejecución**. La aplicación frontend se conecta a `http://localhost:8080` por defecto.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Pasos para la Instalación
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-=======
-# lablanquita_frontend
-App para gestion de fábrica de pastas
->>>>>>> 47e7e4ca30e141fe360b1212843b76992ec9193a
+1.  **Navegar a la carpeta del frontend:**
+    ```bash
+    cd ruta/a/tu/frontend
+    ```
+
+2.  **Instalar Dependencias:**
+    * Ejecutar el siguiente comando para instalar todos los paquetes necesarios:
+        ```bash
+        npm install
+        ```
+
+3.  **Ejecutar la Aplicación:**
+    * Iniciar el servidor de desarrollo con:
+        ```bash
+        npm run dev
+        ```
+    * La aplicación estará disponible en `http://localhost:5173` (o el puerto que indique la terminal).
+
+---
+
+## 🛠️ Tecnologías Utilizadas
+
+* **React 18** con **TypeScript**
+* **Vite**.
+* **Material-UI (MUI)** para los componentes de la interfaz.
+* **Recharts** para la visualización de gráficos.
+* **Axios** para las peticiones a la API.
+* **React Router** para la navegación.
+
+---
+
+## 📖 Secciones de la Aplicación
+
+* **Estadísticas:** La página principal que te da un pulso del negocio en tiempo real.
+* **Nueva Venta:** El punto de venta principal para registrar transacciones rápidas de mostrador.
+* **Productos:** El catálogo completo de tus productos, donde puedes añadir, editar y gestionar el stock.
+* **Pedidos:** El centro de operaciones para los pedidos a domicilio o para retirar. Gestiona el flujo de trabajo desde que el pedido entra hasta que se completa.
+* **Historial de Ventas:** Un registro detallado y ordenable de todas las transacciones realizadas.
