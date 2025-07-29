@@ -26,6 +26,7 @@ Instrucciones para levantar el proyecto.
 
 * **Node.js** (v18 o superior).
 * La **API del backend debe estar en ejecución**. La aplicación frontend se conecta a `http://localhost:8080` por defecto.
+  + Ver en https://github.com/francomarinozzi/back_lablanquita_SpringBoot
 
 ### Pasos para la Instalación
 
