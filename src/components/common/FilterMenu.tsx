@@ -2,11 +2,10 @@ import * as React from 'react';
 import { Button, Menu, Typography, TextField, Box } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 
-// Definimos los tipos de los filtros que este componente puede manejar
+
 interface Filters {
   nombreCliente?: string;
-  fechaDesde?: string;
-  fechaHasta?: string;
+  fecha?: string; 
 }
 
 interface FilterMenuProps {
@@ -76,26 +75,15 @@ export default function FilterMenu({ onFilterChange }: FilterMenuProps) {
           onChange={handleInputChange}
           sx={{ mb: 2 }}
         />
+ 
         <TextField
-          label="Fecha Desde"
-          name="fechaDesde"
+          label="Fecha"
+          name="fecha"
           type="date"
           variant="outlined"
           fullWidth
           size="small"
-          value={filters.fechaDesde || ''}
-          onChange={handleInputChange}
-          InputLabelProps={{ shrink: true }}
-          sx={{ mb: 2 }}
-        />
-        <TextField
-          label="Fecha Hasta"
-          name="fechaHasta"
-          type="date"
-          variant="outlined"
-          fullWidth
-          size="small"
-          value={filters.fechaHasta || ''}
+          value={filters.fecha || ''}
           onChange={handleInputChange}
           InputLabelProps={{ shrink: true }}
           sx={{ mb: 2 }}

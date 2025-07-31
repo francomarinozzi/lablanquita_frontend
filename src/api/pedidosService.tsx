@@ -1,32 +1,47 @@
 import apiClient from './axiosConfig';
-import { Pedido, PedidoParaCrear, PaginatedResponse } from '../types';
+import type { Pedido, PedidoParaCrear, PaginatedResponse } from '../types';
 
 const pedidosEndpoint = '/pedidos';
 
 interface PedidoFilters {
   nombreCliente?: string;
-  fechaDesde?: string;
-  fechaHasta?: string;
+  fecha?: string;
   estado?: string;
   page?: number;
   size?: number;
 }
 
 
+const convertirEstadoParaAPI = (estado: string): string => {
+  switch (estado) {
+    case 'Pendiente':
+      return 'PENDIENTE';
+    case 'En proceso':
+      return 'EN_PROCESO';
+    case 'Completado':
+      return 'COMPLETADO';
+    default:
+      return estado;
+  }
+};
+
 export const getPedidosPaginados = async (filters: PedidoFilters = {}): Promise<PaginatedResponse<Pedido>> => {
   try {
-    
-    const params = {
-      page: filters.page || 0,
-      size: filters.size || 10,
-      nombreCliente: filters.nombreCliente || undefined,
-      fechaDesde: filters.fechaDesde || undefined,
-      fechaHasta: filters.fechaHasta || undefined,
-      estado: filters.estado || undefined,
+    const params: { [key: string]: any } = {
+      page: filters.page ?? 0,
+      size: filters.size ?? 10,
     };
+
+    if (filters.nombreCliente) params.nombreCliente = filters.nombreCliente;
+    if (filters.fecha) params.fecha = filters.fecha;
     
-    const response = await apiClient.get<PaginatedResponse<Pedido>>(`${pedidosEndpoint}/filter`, { params });
+    // Aquí hacemos la conversión
+    if (filters.estado) {
+      params.estado = convertirEstadoParaAPI(filters.estado);
+    }
+
     console.log("➡️ Enviando GET /pedidos/filter con params:", params);
+    const response = await apiClient.get<PaginatedResponse<Pedido>>(`${pedidosEndpoint}/filter`, { params });
     return response.data;
   } catch (error) {
     console.error('Error al obtener los pedidos paginados:', error);
@@ -34,7 +49,8 @@ export const getPedidosPaginados = async (filters: PedidoFilters = {}): Promise<
   }
 };
 
-// Función para traer TODOS los pedidos (para el Dashboard)
+
+
 export const getAllPedidos = async (): Promise<Pedido[]> => {
     try {
         const response = await apiClient.get<Pedido[]>(pedidosEndpoint);

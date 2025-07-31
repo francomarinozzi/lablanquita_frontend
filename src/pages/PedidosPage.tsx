@@ -154,6 +154,9 @@ export default function PedidosPage() {
                     <Typography variant="h6" fontWeight="bold">Pedido #{pedido.id}</Typography>
                     <Chip label={pedido.direccion ? 'Delivery' : 'Retira'} color={pedido.direccion ? 'primary' : 'secondary'} size="small" />
                   </Box>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    {new Date(pedido.fechaHora).toLocaleDateString('es-AR')}
+                  </Typography>
                   {pedido.nombreCliente && <Typography variant="body1" sx={{ mb: 1 }}>{pedido.nombreCliente}</Typography>}
                   <Typography variant="body2" color="text.secondary">{pedido.direccion || 'Retira en local'}</Typography>
                   <Divider sx={{ my: 2 }} />
