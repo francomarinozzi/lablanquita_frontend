@@ -4,7 +4,7 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { VentaParaCrear } from '../types';
+import type { VentaParaCrear } from '../types';
 import { crearVenta } from '../api/ventasService';
 import EditorDetallesVenta, { DetalleVentaState } from '../components/features/EditorDetallesVenta';
 
@@ -13,15 +13,15 @@ export default function NuevaVentaPage() {
   const [totalVenta, setTotalVenta] = React.useState(0);
   const [formaPago, setFormaPago] = React.useState<string | null>('Efectivo');
   const [snackbar, setSnackbar] = React.useState<{ open: boolean, message: string, severity: 'success' | 'error' } | null>(null);
-  const [editorKey, setEditorKey] = React.useState(Date.now()); // <-- Clave para forzar el reseteo
+  const [editorKey, setEditorKey] = React.useState(Date.now());
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const handleDetallesChange = (nuevosDetalles: DetalleVentaState[], nuevoTotal: number) => {
+  const handleDetallesChange = React.useCallback((nuevosDetalles: DetalleVentaState[], nuevoTotal: number) => {
     setDetalles(nuevosDetalles);
     setTotalVenta(nuevoTotal);
-  };
+  }, []); 
   
   const handleFormaPagoChange = (event: React.MouseEvent<HTMLElement>, nuevaFormaPago: string | null) => {
     if (nuevaFormaPago !== null) setFormaPago(nuevaFormaPago);
@@ -31,7 +31,7 @@ export default function NuevaVentaPage() {
     setDetalles([]);
     setTotalVenta(0);
     setFormaPago('Efectivo');
-    setEditorKey(Date.now()); // <-- Cambiamos la key para resetear el componente hijo
+    setEditorKey(Date.now());
   };
 
   const handleFinalizarVenta = async () => {
@@ -75,7 +75,7 @@ export default function NuevaVentaPage() {
       <Typography variant="h4" component="h1" gutterBottom>Nueva Venta</Typography>
       
       <EditorDetallesVenta 
-        key={editorKey} // <-- Pasamos la key aquí
+        key={editorKey}
         onDetallesChange={handleDetallesChange}
         onSaveProductSuccess={() => setSnackbar({ open: true, message: 'Producto creado con éxito.', severity: 'success' })}
       />

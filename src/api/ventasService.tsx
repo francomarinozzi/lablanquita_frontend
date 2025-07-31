@@ -13,7 +13,7 @@ export const crearVenta = async (ventaData: VentaParaCrear): Promise<Venta> => {
   }
 };
 
-export const getVentas = async (): Promise<Venta[]> => {
+export const getAllVentas = async (): Promise<Venta[]> => {
   try {
     const response = await apiClient.get<Venta[]>(ventasEndpoint);
     return response.data;

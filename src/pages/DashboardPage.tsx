@@ -4,9 +4,9 @@ import PointOfSaleIcon from '@mui/icons-material/PointOfSale';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import PendingActionsIcon from '@mui/icons-material/PendingActions';
-import { getVentas } from '../api/ventasService';
+import { getAllVentas } from '../api/ventasService';
 import { getProducts } from '../api/productsService';
-import { getPedidos } from '../api/pedidosService';
+import { getAllPedidos } from '../api/pedidosService'; // <-- USA LA NUEVA FUNCIÓN
 import { Venta, Producto, Pedido } from '../types';
 import DashboardStatCard from '../components/features/DashboardStatCard';
 import GraficoVentasSemanales from '../components/features/GraficoVentasSemanales';
@@ -34,9 +34,9 @@ export default function DashboardPage() {
     const fetchData = async () => {
       try {
         const [ventasData, productosData, pedidosData] = await Promise.all([
-            getVentas(), 
+            getAllVentas(), 
             getProducts(),
-            getPedidos()
+            getAllPedidos() // <-- USA LA NUEVA FUNCIÓN
         ]);
         
         const inicioHoy = new Date(new Date().setHours(0, 0, 0, 0));

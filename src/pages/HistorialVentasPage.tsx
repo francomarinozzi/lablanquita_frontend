@@ -7,7 +7,7 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import type { Venta } from '../types';
-import { getVentas, darDeBajaVenta } from '../api/ventasService';
+import { getAllVentas, darDeBajaVenta } from '../api/ventasService';
 import VentaRow from '../components/features/VentaRow';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -25,7 +25,7 @@ export default function HistorialVentasPage() {
   const cargarVentas = React.useCallback(async () => {
     try {
       setLoading(true);
-      const data = await getVentas();
+      const data = await getAllVentas();
       const ventasActivas = data.filter(venta => venta.activo);
       setVentas(ventasActivas.sort((a, b) => b.id - a.id));
       setError(null);
