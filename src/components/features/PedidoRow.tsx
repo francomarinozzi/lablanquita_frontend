@@ -7,7 +7,8 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import DeleteIcon from '@mui/icons-material/Delete';
-import type { Pedido } from '../../types';
+import { Pedido } from '../../types';
+import DetailPanelContent from './DetailPanelContent';
 
 interface PedidoRowProps {
   pedido: Pedido;
@@ -19,14 +20,16 @@ interface PedidoRowProps {
 export default function PedidoRow({ pedido, onUpdateStatus, onBajaClick, isSlidingOut }: PedidoRowProps) {
   const [open, setOpen] = React.useState(false);
 
+  const rowStyle = {
+    transition: 'transform 0.5s ease-out, opacity 0.5s ease-out',
+    transform: isSlidingOut ? 'translateX(100%)' : 'translateX(0)',
+    opacity: isSlidingOut ? 0 : 1,
+    '& > *': { borderBottom: 'unset' },
+  };
+
   return (
     <React.Fragment>
-      <TableRow sx={{ 
-          '& > *': { borderBottom: 'unset' },
-          transition: 'transform 0.5s ease-out, opacity 0.5s ease-out',
-          transform: isSlidingOut ? 'translateX(100%)' : 'translateX(0)',
-          opacity: isSlidingOut ? 0 : 1,
-      }}>
+      <TableRow sx={rowStyle}>
         <TableCell>
           <IconButton
             aria-label="expand row"
@@ -46,46 +49,26 @@ export default function PedidoRow({ pedido, onUpdateStatus, onBajaClick, isSlidi
         </TableCell>
         <TableCell>{new Date(pedido.fechaHora).toLocaleDateString('es-AR')}</TableCell>
         <TableCell align="center">
-          {pedido.estado === 'Completado' ? (
-             <IconButton color="error" onClick={() => onBajaClick(pedido.id)}>
-                <DeleteIcon />
-            </IconButton>
-          ) : (
+          {pedido.estado !== 'Completado' ? (
              <Button 
                 variant="contained" 
                 size="small"
                 endIcon={<NavigateNextIcon />}
                 onClick={() => onUpdateStatus(pedido.id)}
             >
-                {pedido.estado === 'Pendiente' ? 'A "En Proceso"' : 'Completar'}
+                {pedido.estado === 'Pendiente' ? 'A Proceso' : 'Completar'}
             </Button>
+          ) : (
+            <IconButton color="error" onClick={() => onBajaClick(pedido.id)}>
+              <DeleteIcon />
+            </IconButton>
           )}
         </TableCell>
       </TableRow>
       <TableRow>
           <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={7}>
           <Collapse in={open} timeout="auto" unmountOnExit>
-              <Box sx={{ margin: 1, padding: 2, backgroundColor: 'rgba(0,0,0,0.02)', borderRadius: 2 }}>
-              <Typography variant="h6" gutterBottom component="div">
-                  Detalle del Pedido
-              </Typography>
-              <Table size="small">
-                  <TableHead>
-                  <TableRow>
-                      <TableCell>Producto</TableCell>
-                      <TableCell align="center">Cantidad</TableCell>
-                  </TableRow>
-                  </TableHead>
-                  <TableBody>
-                  {pedido.detalles.map((detalle, index) => (
-                      <TableRow key={index}>
-                      <TableCell>{detalle.nombreProducto}</TableCell>
-                      <TableCell align="center">{detalle.cantidad}</TableCell>
-                      </TableRow>
-                  ))}
-                  </TableBody>
-              </Table>
-              </Box>
+              <DetailPanelContent row={pedido} />
           </Collapse>
           </TableCell>
       </TableRow>

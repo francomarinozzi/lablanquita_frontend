@@ -5,10 +5,11 @@ import {
   TableRow, TableCell, TableBody, InputAdornment, ToggleButtonGroup, ToggleButton,
   Snackbar, Alert, Paper, Grid, useMediaQuery
 } from '@mui/material';
-import { TransitionProps } from '@mui/material/transitions';
+import type { TransitionProps } from '@mui/material/transitions';
 import CloseIcon from '@mui/icons-material/Close';
-import { VentaParaCrear } from '../../types';
+import type { VentaParaCrear } from '../../types';
 import EditorDetallesVenta, { DetalleVentaState } from './EditorDetallesVenta';
+
 
 
 interface NuevoPedidoModalProps {

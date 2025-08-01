@@ -48,6 +48,7 @@ export interface Pedido {
   activo: boolean;
   detalles: DetalleVenta[];
   fechaHora: string;
+  total:number;
 }
 
 export interface PedidoParaCrear {

@@ -6,7 +6,7 @@ import {
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Venta } from '../../types';
+import type { Venta } from '../../types';
 
 interface VentaRowProps {
   venta: Venta;
