@@ -32,6 +32,7 @@ export default function NuevoPedidoModal({ open, onClose, onSave }: NuevoPedidoM
   const [totalPedido, setTotalPedido] = React.useState(0);
   const [formaPago, setFormaPago] = React.useState<string>('Efectivo');
   const [datosCliente, setDatosCliente] = React.useState({ nombreCliente: '', direccion: '' });
+  const [comentarios, setComentarios] = React.useState('');
   const [snackbar, setSnackbar] = React.useState<{ open: boolean, message: string, severity: 'success' | 'error' } | null>(null);
 
   const handleDetallesChange = (nuevosDetalles: DetalleVentaState[], nuevoTotal: number) => {
@@ -62,6 +63,7 @@ export default function NuevoPedidoModal({ open, onClose, onSave }: NuevoPedidoM
       setDetalles([]);
       setFormaPago('Efectivo');
       setDatosCliente({ nombreCliente: '', direccion: '' });
+      setComentarios('');
       onClose();
   }
 
@@ -82,7 +84,7 @@ export default function NuevoPedidoModal({ open, onClose, onSave }: NuevoPedidoM
       }),
     };
 
-    const pedidoData = { ...datosCliente, venta };
+    const pedidoData = { ...datosCliente, venta, comentarios };
     await onSave(pedidoData);
     handleResetAndClose();
   };
@@ -102,11 +104,23 @@ export default function NuevoPedidoModal({ open, onClose, onSave }: NuevoPedidoM
         );
       case 1:
         return (
-          <EditorDetallesVenta 
-            onDetallesChange={handleDetallesChange} 
-            onSaveProductSuccess={() => setSnackbar({ open: true, message: 'Producto creado con éxito.', severity: 'success' })}
-            initialDetalles={detalles}
-          />
+          <>
+            <EditorDetallesVenta 
+              onDetallesChange={handleDetallesChange} 
+              onSaveProductSuccess={() => setSnackbar({ open: true, message: 'Producto creado con éxito.', severity: 'success' })}
+              initialDetalles={detalles}
+            />
+            <TextField
+              label="Comentarios (opcional)"
+              multiline
+              rows={4}
+              value={comentarios}
+              onChange={(e) => setComentarios(e.target.value)}
+              fullWidth
+              margin="normal"
+              sx={{ mt: 2 }}
+            />
+          </>
         );
       case 2:
         return (
@@ -115,6 +129,7 @@ export default function NuevoPedidoModal({ open, onClose, onSave }: NuevoPedidoM
                 <Paper variant="outlined" sx={{p: 2, mb: 2}}>
                     <Typography gutterBottom><strong>Cliente:</strong> {datosCliente.nombreCliente || 'No especificado'}</Typography>
                     <Typography><strong>Dirección:</strong> {datosCliente.direccion || 'Retira en local'}</Typography>
+                    {comentarios && <Typography><strong>Comentarios:</strong> {comentarios}</Typography>}
                 </Paper>
                 <TableContainer component={Paper} variant="outlined">
                     <Table size="small">

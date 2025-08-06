@@ -39,7 +39,7 @@ export interface VentaParaCrear {
   detalles: DetalleVentaParaCrear[];
 }
 
-export interface Pedido {
+export interface Pedido { //se usa para leer pedidos
   id: number;
   idVenta: number;
   direccion: string | null;
@@ -48,10 +48,12 @@ export interface Pedido {
   activo: boolean;
   detalles: DetalleVenta[];
   fechaHora: string;
+  comentarios: string | null;
 }
 
-export interface PedidoParaCrear {
+export interface PedidoParaCrear { 
   nombreCliente: string;
   direccion: string;
   venta: VentaParaCrear;
+  comentarios?:string;
 }
