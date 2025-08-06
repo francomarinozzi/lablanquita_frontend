@@ -18,10 +18,10 @@ export default function NuevaVentaPage() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const handleDetallesChange = (nuevosDetalles: DetalleVentaState[], nuevoTotal: number) => {
-    setDetalles(nuevosDetalles);
-    setTotalVenta(nuevoTotal);
-  };
+  const handleDetallesChange = React.useCallback((nuevosDetalles: DetalleVentaState[], nuevoTotal: number) => {
+  setDetalles(nuevosDetalles);
+  setTotalVenta(nuevoTotal);
+}, []);
   
   const handleFormaPagoChange = (event: React.MouseEvent<HTMLElement>, nuevaFormaPago: string | null) => {
     if (nuevaFormaPago !== null) setFormaPago(nuevaFormaPago);
@@ -31,7 +31,7 @@ export default function NuevaVentaPage() {
     setDetalles([]);
     setTotalVenta(0);
     setFormaPago('Efectivo');
-    setEditorKey(Date.now()); // <-- Cambiamos la key para resetear el componente hijo
+    setEditorKey(Date.now()); 
   };
 
   const handleFinalizarVenta = async () => {
