@@ -1,3 +1,5 @@
+// francomarinozzi/lablanquita_frontend/lablanquita_frontend-cacb52ae1db2c0d193bc52db7bc690a714d33213/src/pages/PedidosPage.tsx
+
 import * as React from 'react';
 import {
   Box, Typography, Button, Tabs, Tab, CircularProgress, useMediaQuery,
@@ -132,6 +134,7 @@ export default function PedidosPage() {
                   </Box>
                   {pedido.nombreCliente && <Typography variant="body1" sx={{ mb: 1 }}>{pedido.nombreCliente}</Typography>}
                   {pedido.direccion && <Typography variant="body2" color="text.secondary">{pedido.direccion}</Typography>}
+                  {pedido.comentarios && <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}><strong>Comentarios:</strong> {pedido.comentarios}</Typography>}
                   <Divider sx={{ my: 2 }} />
                   <Typography variant="body2" fontWeight="bold" sx={{mb: 1}}>Detalle:</Typography>
                   {pedido.detalles.map((detalle, index) => (

@@ -1,3 +1,5 @@
+// francomarinozzi/lablanquita_frontend/lablanquita_frontend-cacb52ae1db2c0d193bc52db7bc690a714d33213/src/components/features/PedidoRow.tsx
+
 import * as React from 'react';
 import {
   Box, Typography, Table, TableBody, TableCell, TableHead, TableRow,
@@ -63,6 +65,11 @@ export default function PedidoRow({ pedido, onUpdateStatus, onBajaClick, isSlidi
                   <Typography variant="body2" color="text.secondary" gutterBottom>
                       <strong>Dirección:</strong> {pedido.direccion}
                   </Typography>
+              )}
+              {pedido.comentarios && (
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  <strong>Comentarios:</strong> {pedido.comentarios}
+                </Typography>
               )}
               <Table size="small">
                   <TableHead>
